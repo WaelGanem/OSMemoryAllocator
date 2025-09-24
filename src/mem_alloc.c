@@ -59,6 +59,11 @@ void memory_init(void)
     /* register the function that will be called when the programs exits */
     atexit(run_at_exit);
 
+    heap_begin = my_mmap(MEM_POOL_SIZE);
+    first_free = (memblk_free_t *)heap_begin;
+    first_free->size = MEM_POOL_SIZE;
+    first_free->next = NULL;
+
     /* TODO: insert your code here */
 
     /* TODO: start by using the provided my_mmap function to allocate

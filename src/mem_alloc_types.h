@@ -6,7 +6,7 @@
 /* Structure declaration for a free block */
 struct memblk_free{
     size_t size;
-    /* TODO: DEFINE */
+    struct memblk_free *next;
 }; 
 typedef struct memblk_free memblk_free_t; 
 
