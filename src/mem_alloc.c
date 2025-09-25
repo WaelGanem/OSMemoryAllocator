@@ -64,20 +64,28 @@ void memory_init(void)
     first_free->size = MEM_POOL_SIZE;
     first_free->next = NULL;
 
-    /* TODO: insert your code here */
-
-    /* TODO: start by using the provided my_mmap function to allocate
-     * the memory region you are going to manage */
-
 }
 
 void *memory_alloc(size_t size)
 {
 
-    /* TODO: insert your code here */
-
     /* TODO : don't forget to call the function print_alloc_info()
      * appropriately */
+    header = align_up(sizeof(memblk_allocated_t), MEM_ALIGNMENT);
+    payloder = align_up(size, MEM_ALIGNMENT);
+    real_size = header + payloder;
+    
+    memblk_free_t *current = first_free;
+    memblk_free_t *previous = NULL;
+
+    while(current != NULL && current->size < real_size){
+        previous = current;
+        current = current->next;
+    }
+    if(current == NULL){
+        print_alloc_error(size); exit(0);
+    }
+
     
     return NULL;
 }
