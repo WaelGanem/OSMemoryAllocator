@@ -72,10 +72,10 @@ void *memory_alloc(size_t size)
     /* TODO : don't forget to call the function print_alloc_info()
      * appropriately */
     header = align_up(sizeof(memblk_allocated_t), MEM_ALIGNMENT);
-    payloder = align_up(size, MEM_ALIGNMENT);
-    real_size = header + payloder;
+    payload = align_up(size, MEM_ALIGNMENT);
+    real_size = header + payload;
     
-    memblk_free_t *current = first_free;
+    memblk_free_t *current = first_free;//it's a pointer (address)
     memblk_free_t *previous = NULL;
 
     while(current != NULL && current->size < real_size){
@@ -83,11 +83,44 @@ void *memory_alloc(size_t size)
         current = current->next;
     }
     if(current == NULL){
-        print_alloc_error(size); exit(0);
+        print_alloc_error(size); 
+        exit(0);
     }
+    size_t leftover = current->size - real_size;
+    size_t minimal_tail = align_up(sizeof(memblk_free_t), MEM_ALIGNMENT) + MEM_ALIGNMENT;
 
-    
-    return NULL;
+    if(leftover < minimal_tail){
+        if(previous == NULL){
+            first_free = current->next;
+        } else {
+            previous->next = current->next;
+        }
+        memblk_allocated_t *allocated = (memblk_allocated_t *) current;
+        allocated->size = current->size;
+
+        void *payload_pointer = (void *)( (char *) current + header);
+        print_alloc_info(payload_pointer, (int)size);
+        return payload_pointer;
+
+    } else {
+        memblk_free_t *next_free = current->next;
+        memblk_allocated_t *allocated = (memblk_allocated_t *) current;
+        allocated->size = real_size;
+
+        memblk_free_t *tail_adr = (memblk_free_t *)((char *)current + real_size);
+        tail_adr->size = leftover;
+        tail_adr->next = next_free;
+
+        if(previous == NULL){
+            first_free = tail_adr;
+        } else {
+            previous->next = tail_adr;
+        }
+        void *payload_pointer = (void *)((char *)current + header);
+        print_alloc_info(payload_pointer, (int)size);
+        return payload_pointer;
+
+    }
 }
 
 void memory_free(void *p)
