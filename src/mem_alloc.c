@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>  
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -20,6 +21,12 @@ memblk_free_t *first_free;
 
 
 #define ULONG(x)((long unsigned int)(x))
+
+static size_t align_up(size_t n, size_t a) {
+    if (a <= 1) return n; 
+    size_t r = n % a;           
+    return r ? (n + (a - r)) : n;
+}
 
 #if defined(FIRST_FIT)
 
@@ -66,14 +73,15 @@ void memory_init(void)
 
 }
 
+
 void *memory_alloc(size_t size)
 {
 
     /* TODO : don't forget to call the function print_alloc_info()
      * appropriately */
-    header = align_up(sizeof(memblk_allocated_t), MEM_ALIGNMENT);
-    payload = align_up(size, MEM_ALIGNMENT);
-    real_size = header + payload;
+    size_t header = align_up(sizeof(memblk_allocated_t), MEM_ALIGNMENT);
+    size_t payload = align_up(size, MEM_ALIGNMENT);
+    size_t real_size = header + payload;
     
     memblk_free_t *current = first_free;//it's a pointer (address)
     memblk_free_t *previous = NULL;
@@ -87,8 +95,7 @@ void *memory_alloc(size_t size)
         exit(0);
     }
     size_t leftover = current->size - real_size;
-    size_t minimal_tail = align_up(sizeof(memblk_free_t), MEM_ALIGNMENT) + MEM_ALIGNMENT;
-
+    size_t minimal_tail = align_up(sizeof(memblk_free_t), MEM_ALIGNMENT);
     if(leftover < minimal_tail){
         if(previous == NULL){
             first_free = current->next;
