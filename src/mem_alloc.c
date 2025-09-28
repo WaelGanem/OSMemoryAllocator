@@ -133,7 +133,11 @@ void *memory_alloc(size_t size)
 void memory_free(void *p)
 {
 
-    /* TODO: insert your code here */
+    size_t header_size = align_up(sizeof(memblk_allocated_t), MEM_ALIGNMENT);
+    memblk_allocated_t *header_adr = (memblk_allocated_t *)((char *)p - header_size);
+    memblk_free_t *free_adr = (memblk_free_t *) header_adr;
+
+    
 
     /* TODO : don't forget to call the function print_free_info()
      * appropriately */
