@@ -83,7 +83,7 @@ void *memory_alloc(size_t size)
     size_t payload = align_up(size, MEM_ALIGNMENT);
     size_t real_size = header + payload;
     
-    memblk_free_t *current = first_free;//it's a pointer (address)
+    memblk_free_t *current = first_free;
     memblk_free_t *previous = NULL;
 
     while(current != NULL && current->size < real_size){
@@ -132,15 +132,40 @@ void *memory_alloc(size_t size)
 
 void memory_free(void *p)
 {
-
     size_t header_size = align_up(sizeof(memblk_allocated_t), MEM_ALIGNMENT);
     memblk_allocated_t *header_adr = (memblk_allocated_t *)((char *)p - header_size);
     memblk_free_t *free_adr = (memblk_free_t *) header_adr;
+    free_adr->size = header_adr->size;
 
-    
+    memblk_free_t *current = first_free;
+    memblk_free_t *prev = NULL;
 
-    /* TODO : don't forget to call the function print_free_info()
-     * appropriately */
+    while (current != NULL && current < free_adr) {
+        prev = current;
+        current = current->next;
+    }
+    if(prev == NULL){
+        free_adr->next = current;
+        first_free = free_adr;
+    } else {
+        prev->next = free_adr;
+        free_adr->next = current;
+    }
+
+    //now merging with neighbours
+    if(free_adr->next && ((char *)free_adr + free_adr->size) == (char *)free_adr->next){
+        memblk_free_t *right = free_adr->next;
+        free_adr->next = right->next;
+        free_adr->size += right->size;
+    }
+
+    if(prev &&  ((char *)prev + prev->size) == (char *)free_adr){
+        prev->size += free_adr->size;
+        prev->next  = free_adr->next;
+        free_adr = prev;
+    }
+
+    print_free_info(p);
 
 }
 
